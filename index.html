@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REAL COUNT PILKADES DESA PRINGGABAYA 2027–2035</title>
+
+    <!-- === TAMBAHAN META TAG OPEN GRAPH UNTUK THUMBNAIL WHATSAPP === -->
+    <meta property="og:title" content="REAL COUNT PILKADES DESA PRINGGABAYA 2027–2035">
+    <meta property="og:description" content="Penghitungan sementara (Real Count) resmi internal Pilkades Desa Pringgabaya Periode 2027–2035.">
+    <meta property="og:image" content="https://lh3.googleusercontent.com/d/1tDrK_vFPekLaKf2r1tO18N7rKSafM1PQ"> <!-- Ganti link ini dengan link foto thumbnail pilihan Anda -->
+    <meta property="og:url" content="https://username.github.io/nama-repo/"> <!-- Ganti dengan link GitHub Pages Anda -->
+    <meta property="og:type" content="website">
+    <!-- ============================================================== -->
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
@@ -197,7 +206,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- JavaScript Logic (Tidak ada yang diubah) -->
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5vJ5K67AyVs17_vbrONck7i12iI9eNaxOCbm5YkdvePEwYLq4s4NDpMKsUH_B5OcHmQ/exec';
 
@@ -229,8 +238,6 @@
                     if (data.status === 'success') {
                         globalData = data;
                         renderDashboard(data);
-                        // CATATAN: setupOperatorForm() DIHAPUS DARI SINI 
-                        // agar form input tidak mereset inputan operator setiap kali auto-refresh berjalan (12 detik).
                     }
                 })
                 .catch(err => console.error("Error fetching data:", err));
@@ -315,7 +322,6 @@
         }
 
         function renderTable(data) {
-            // Render Dynamic Table Header with Photos (ditambahkan referrerpolicy="no-referrer")
             const theadRow = document.getElementById('tpsTableHeaderRow');
             if (theadRow && data.calon && data.calon.length > 0) {
                 let headerHtml = `<th class="p-3">TPS</th>`;
@@ -337,7 +343,6 @@
                 theadRow.innerHTML = headerHtml;
             }
 
-            // Render Table Body
             const tbody = document.getElementById('tpsTableBody');
             tbody.innerHTML = '';
 
@@ -433,7 +438,7 @@
                     { no_urut: 3, nama: 'Lalu Saperi', foto: 'https://lh3.googleusercontent.com/d/13-1JQUegLphO3zO7FwotHefi4hGh7mbr' },
                     { no_urut: 4, nama: 'Lalu Herman Sugandi', foto: 'https://lh3.googleusercontent.com/d/1bNrgRAkidwtVh-Q_kRu3FYSvkNU3zxMf' },
                     { no_urut: 5, nama: 'Gupran', foto: 'https://lh3.googleusercontent.com/d/1Ci2fp-HxbMO4Iq3ypz0nf1I4_vSwUHmE' }
-                 ];
+                   ];
 
             listCalon.forEach((c, idx) => {
                 const cNum = idx + 1;
