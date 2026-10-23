@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REAL COUNT PILKADES DESA PRINGGABAYA 2027–2035</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .bg-gold { background-color: #D4AF37; }
+        .border-gold { border-color: #D4AF37; }
+        .text-gold { color: #D4AF37; }
+
+        /* Menghilangkan tombol panah naik-turun pada input number agar mudah diketik langsung */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-emerald-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">PILKADES DESA PRINGGABAYA</h1>
+                <p class="text-xs md:text-sm text-emerald-100">Real Count Pemilihan Kepala Desa Periode 2027–2035</p>
+            </div>
+            <div>
+                <button id="btnLoginModal" onclick="openLoginModal()" class="bg-gold text-emerald-900 font-semibold px-4 py-2 rounded-lg shadow hover:bg-yellow-400 transition">Login Operator</button>
+                <button id="btnLogout" onclick="logout()" class="hidden bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-red-700 transition">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="container mx-auto px-4 py-6">
+
+        <!-- Disclaimer Banner -->
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-6 rounded shadow-sm text-xs md:text-sm">
+            <p class="font-bold">PERINGATAN / DISCLAIMER:</p>
+            <p>Hasil perhitungan ini merupakan <strong>penghitungan sementara (Real Count)</strong> internal dan BUKAN hasil resmi. Hasil akhir resmi tetap menunggu rekapitulasi dan penetapan berjenjang oleh Panitia Pemilihan Kepala Desa Pringgabaya.</p>
+        </div>
+
+        <!-- Form Operator Section (Hidden by Default) -->
+        <section id="formOperatorSection" class="hidden bg-white p-6 rounded-xl shadow-md border border-emerald-200 mb-8">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="text-xl font-bold text-emerald-800">FORM ENTRY SUARA TPS: <span id="opTpsTitle" class="text-emerald-600">TPS 00</span></h2>
+                <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full" id="opRoleBadge">Operator TPS</span>
+            </div>
+            
+            <form id="inputForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                <!-- Informasi Operator & TPS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-emerald-50 p-4 rounded-lg">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Petugas / Operator</label>
+                        <input type="text" id="opName" readonly class="w-full bg-white border border-gray-300 rounded px-3 py-2 font-medium text-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Wilayah TPS</label>
+                        <input type="text" id="opTpsId" readonly class="w-full bg-white border border-gray-300 rounded px-3 py-2 font-bold text-emerald-700">
+                    </div>
+                </div>
+
+                <!-- Perolehan Suara Calon (5 Calon) -->
+                <div>
+                    <h3 class="font-bold text-gray-800 text-base mb-3 border-l-4 border-emerald-600 pl-2">Input Suara Sah Masing-Masing Calon</h3>
+                    <div id="calonInputContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- Input perolehan calon diproduksi dinamis via Javascript -->
+                    </div>
+                </div>
+
+                <!-- Suara Tidak Sah & Total -->
+                <div class="border-t pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Total Suara Sah (Otomatis)</label>
+                        <input type="number" id="inputTotalSah" value="0" readonly class="w-full bg-emerald-100 border border-emerald-300 font-bold text-emerald-800 rounded px-3 py-2 text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-600 uppercase mb-1">Suara Tidak Sah *</label>
+                        <input type="number" id="inputTidakSah" min="0" value="0" required onfocus="this.select()" oninput="calculateFormTotals()" class="w-full border border-red-300 rounded px-3 py-2 text-lg font-bold text-red-600 focus:ring-2 focus:ring-red-500 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Total Hak Pilih Digunakan</label>
+                        <input type="number" id="inputTotalHakPilih" value="0" readonly class="w-full bg-gray-200 border border-gray-300 rounded px-3 py-2 font-extrabold text-gray-800 text-lg">
+                    </div>
+                </div>
+
+                <!-- Tombol Submit -->
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="submit" id="btnSubmitForm" class="w-full md:w-auto bg-emerald-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-emerald-700 shadow-md transition flex justify-center items-center gap-2">
+                        💾 Simpan &amp; Perbarui Data TPS
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-emerald-600">
+                <p class="text-xs text-gray-500 uppercase font-bold">Total TPS</p>
+                <p class="text-2xl font-extrabold text-gray-800">20 TPS</p>
+                <p class="text-xs text-emerald-600 mt-1" id="statTpsStatus">0 Sah / 0 Verifikasi</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-600">
+                <p class="text-xs text-gray-500 uppercase font-bold">Total Suara Masuk</p>
+                <p class="text-2xl font-extrabold text-gray-800" id="statTotalSuara">0</p>
+                <p class="text-xs text-blue-600 mt-1" id="statSuaraSahDetail">Sah: 0 | Tidak Sah: 0</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-gold">
+                <p class="text-xs text-gray-500 uppercase font-bold">Progres Penghitungan</p>
+                <p class="text-2xl font-extrabold text-gray-800" id="statProgresPercent">0%</p>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div id="progressBar" class="bg-emerald-600 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-purple-600">
+                <p class="text-xs text-gray-500 uppercase font-bold">Pembaruan Terakhir</p>
+                <p class="text-sm font-semibold text-gray-800 mt-2" id="statLastUpdate">-</p>
+                <button onclick="fetchData()" class="mt-2 text-xs text-emerald-600 hover:underline flex items-center gap-1">↻ Refresh Manual</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard (Peringkat Calon) -->
+        <section class="mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Peringkat Suara Terbanyak</h2>
+            <div id="leaderboardContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                <!-- Dynamic Leaderboard Cards -->
+            </div>
+        </section>
+
+        <!-- Graphics Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-5 rounded-xl shadow-md">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Perolehan Suara Total Calon</h3>
+                <canvas id="chartTotalCalon" class="max-h-80"></canvas>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-md">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Perolehan Suara Per TPS</h3>
+                <canvas id="chartPerTPS" class="max-h-80"></canvas>
+            </div>
+        </section>
+
+        <!-- Detail Table Section -->
+        <section class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="p-5 border-b flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800">Rincian Perolehan Suara TPS 01 - TPS 20</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr id="tpsTableHeaderRow" class="bg-emerald-700 text-white text-xs uppercase">
+                            <th class="p-3">TPS</th>
+                            <th class="p-3 text-center">Calon 1</th>
+                            <th class="p-3 text-center">Calon 2</th>
+                            <th class="p-3 text-center">Calon 3</th>
+                            <th class="p-3 text-center">Calon 4</th>
+                            <th class="p-3 text-center">Calon 5</th>
+                            <th class="p-3 text-center">Tdk Sah</th>
+                            <th class="p-3 text-center">Total</th>
+                            <th class="p-3 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tpsTableBody" class="text-sm divide-y">
+                        <!-- Dynamic Table Row -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Login -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Login Operator / Admin</h3>
+            <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">ID TPS / Admin</label>
+                    <input type="text" id="loginUserId" placeholder="Contoh: TPS 01 atau ADMIN" required class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">PIN / Password</label>
+                    <input type="password" id="loginPin" required class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeLoginModal()" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 font-semibold">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5vJ5K67AyVs17_vbrONck7i12iI9eNaxOCbm5YkdvePEwYLq4s4NDpMKsUH_B5OcHmQ/exec';
+
+        let currentUser = null;
+        let globalData = null;
+        let chart1 = null;
+        let chart2 = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedSession = localStorage.getItem('pilkades_session');
+            if (savedSession) {
+                try {
+                    currentUser = JSON.parse(savedSession);
+                    document.getElementById('btnLoginModal').classList.add('hidden');
+                    document.getElementById('btnLogout').classList.remove('hidden');
+                } catch (e) {
+                    localStorage.removeItem('pilkades_session');
+                }
+            }
+
+            fetchData();
+            setInterval(fetchData, 12000);
+        });
+
+        function fetchData() {
+            fetch(`${SCRIPT_URL}?action=getDashboardData`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        globalData = data;
+                        renderDashboard(data);
+                        // CATATAN: setupOperatorForm() DIHAPUS DARI SINI 
+                        // agar form input tidak mereset inputan operator setiap kali auto-refresh berjalan (12 detik).
+                    }
+                })
+                .catch(err => console.error("Error fetching data:", err));
+        }
+
+        function renderDashboard(data) {
+            document.getElementById('statTotalSuara').innerText = data.summary.total_suara_masuk.toLocaleString();
+            document.getElementById('statSuaraSahDetail').innerText = `Sah: ${data.summary.total_suara_sah.toLocaleString()} | Tidak Sah: ${data.summary.total_suara_tidak_sah.toLocaleString()}`;
+            
+            const progresPercent = ((data.summary.tps_sudah / 20) * 100).toFixed(1);
+            document.getElementById('statProgresPercent').innerText = `${progresPercent}%`;
+            document.getElementById('progressBar').style.width = `${progresPercent}%`;
+            document.getElementById('statTpsStatus').innerText = `${data.summary.tps_sudah} Sah / ${data.summary.tps_verifikasi} Verifikasi`;
+            document.getElementById('statLastUpdate').innerText = data.summary.last_update;
+
+            renderLeaderboard(data);
+            renderCharts(data);
+            renderTable(data);
+        }
+
+        function renderLeaderboard(data) {
+            const container = document.getElementById('leaderboardContainer');
+            container.innerHTML = '';
+
+            let sortedCalon = data.calon.map((c, idx) => {
+                const votes = data.summary.suara_calon[idx] || 0;
+                const pct = data.summary.total_suara_sah > 0 ? ((votes / data.summary.total_suara_sah) * 100).toFixed(2) : 0;
+                return { ...c, votes: votes, percent: pct };
+            }).sort((a, b) => b.votes - a.votes);
+
+            sortedCalon.forEach((c, index) => {
+                const rank = index + 1;
+                const badgeColor = rank === 1 ? 'bg-yellow-400 text-yellow-900' : 'bg-emerald-100 text-emerald-800';
+                
+                const cardHtml = `
+                    <div class="bg-white rounded-xl shadow-md p-4 flex flex-col items-center border-2 ${rank === 1 ? 'border-gold transform scale-105' : 'border-gray-100'} transition duration-300">
+                        <span class="text-xs font-bold px-2 py-1 rounded-full ${badgeColor} mb-2">Peringkat #${rank}</span>
+                        <img src="${c.foto}" alt="${c.nama}" referrerpolicy="no-referrer" class="w-20 h-20 rounded-full object-cover shadow border mb-2">
+                        <h4 class="font-bold text-center text-sm text-gray-800">${c.nama}</h4>
+                        <p class="text-xs text-gray-500 mb-2">No. Urut ${c.no_urut}</p>
+                        <p class="text-xl font-extrabold text-emerald-700">${c.votes.toLocaleString()}</p>
+                        <p class="text-xs text-gray-500 font-semibold">${c.percent}% Suara</p>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        function renderCharts(data) {
+            const labels = data.calon.map(c => c.nama);
+            const votes = data.summary.suara_calon;
+
+            const ctx1 = document.getElementById('chartTotalCalon').getContext('2d');
+            if (chart1) chart1.destroy();
+            chart1 = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Perolehan Suara',
+                        data: votes,
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899']
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            const ctx2 = document.getElementById('chartPerTPS').getContext('2d');
+            const tpsLabels = data.tps_data.map(t => t.tps_id);
+            if (chart2) chart2.destroy();
+            chart2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: tpsLabels,
+                    datasets: [
+                        { label: 'Sah', data: data.tps_data.map(t => t.total_sah), backgroundColor: '#10B981' },
+                        { label: 'Tidak Sah', data: data.tps_data.map(t => t.tidak_sah), backgroundColor: '#EF4444' }
+                    ]
+                },
+                options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } }
+            });
+        }
+
+        function renderTable(data) {
+            // Render Dynamic Table Header with Photos (ditambahkan referrerpolicy="no-referrer")
+            const theadRow = document.getElementById('tpsTableHeaderRow');
+            if (theadRow && data.calon && data.calon.length > 0) {
+                let headerHtml = `<th class="p-3">TPS</th>`;
+                data.calon.forEach((c) => {
+                    headerHtml += `
+                        <th class="p-3 text-center">
+                            <div class="flex flex-col items-center gap-1">
+                                <img src="${c.foto}" alt="${c.nama}" referrerpolicy="no-referrer" class="w-9 h-9 rounded-full object-cover border-2 border-emerald-300 shadow">
+                                <span class="font-bold">${c.no_urut}. ${c.nama}</span>
+                            </div>
+                        </th>
+                    `;
+                });
+                headerHtml += `
+                    <th class="p-3 text-center">Tdk Sah</th>
+                    <th class="p-3 text-center">Total</th>
+                    <th class="p-3 text-center">Status</th>
+                `;
+                theadRow.innerHTML = headerHtml;
+            }
+
+            // Render Table Body
+            const tbody = document.getElementById('tpsTableBody');
+            tbody.innerHTML = '';
+
+            data.tps_data.forEach(tps => {
+                let statusBadge = `<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">Belum</span>`;
+                if (tps.status === 'Terverifikasi') {
+                    statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">Sah</span>`;
+                } else if (tps.status === 'Menunggu Verifikasi') {
+                    statusBadge = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-semibold">Verifikasi</span>`;
+                }
+
+                const tr = `
+                    <tr class="hover:bg-gray-50 text-center">
+                        <td class="p-3 font-semibold text-left">${tps.tps_id}</td>
+                        <td class="p-3">${tps.c1}</td>
+                        <td class="p-3">${tps.c2}</td>
+                        <td class="p-3">${tps.c3}</td>
+                        <td class="p-3">${tps.c4}</td>
+                        <td class="p-3">${tps.c5}</td>
+                        <td class="p-3 text-red-500">${tps.tidak_sah}</td>
+                        <td class="p-3 font-bold">${tps.total_pemilih}</td>
+                        <td class="p-3">${statusBadge}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += tr;
+            });
+        }
+
+        function openLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+
+        function handleLoginSubmit(e) {
+            if (e) e.preventDefault();
+            const userId = document.getElementById('loginUserId').value;
+            const pin = document.getElementById('loginPin').value;
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'login', user_id: userId, pin: pin })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    currentUser = res;
+                    localStorage.setItem('pilkades_session', JSON.stringify(res));
+                    closeLoginModal();
+                    document.getElementById('btnLoginModal').classList.add('hidden');
+                    document.getElementById('btnLogout').classList.remove('hidden');
+                    setupOperatorForm();
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => alert('Gagal login: ' + err));
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('pilkades_session');
+            document.getElementById('formOperatorSection').classList.add('hidden');
+            document.getElementById('btnLoginModal').classList.remove('hidden');
+            document.getElementById('btnLogout').classList.add('hidden');
+        }
+
+        function setupOperatorForm() {
+            const formSec = document.getElementById('formOperatorSection');
+            if (!formSec) return;
+            
+            formSec.classList.remove('hidden');
+            
+            if (currentUser) {
+                document.getElementById('opTpsTitle').innerText = currentUser.tps_id || 'TPS 00';
+                document.getElementById('opTpsId').value = currentUser.tps_id || '';
+                document.getElementById('opName').value = currentUser.operator_name || '';
+                document.getElementById('opRoleBadge').innerText = currentUser.role || 'Operator';
+            }
+
+            const container = document.getElementById('calonInputContainer');
+            if (!container) return;
+            
+            const existingTpsData = (globalData && globalData.tps_data) 
+                ? globalData.tps_data.find(t => t.tps_id === currentUser?.tps_id) 
+                : null;
+
+            container.innerHTML = '';
+            
+            const listCalon = (globalData && globalData.calon && globalData.calon.length > 0)
+                ? globalData.calon
+                : [
+                    { no_urut: 1, nama: 'Lalu Sudi', foto: 'https://lh3.googleusercontent.com/d/1tDrK_vFPekLaKf2r1tO18N7rKSafM1PQ]' },
+                    { no_urut: 2, nama: 'Sutiman', foto: 'https://lh3.googleusercontent.com/d/1t6sLxXi69wq0BvwwStHT4gdG4UOPrARx' },
+                    { no_urut: 3, nama: 'Lalu Saperi', foto: 'https://lh3.googleusercontent.com/d/13-1JQUegLphO3zO7FwotHefi4hGh7mbr' },
+                    { no_urut: 4, nama: 'Lalu Herman Sugandi', foto: 'https://lh3.googleusercontent.com/d/1bNrgRAkidwtVh-Q_kRu3FYSvkNU3zxMf' },
+                    { no_urut: 5, nama: 'Gupran', foto: 'https://lh3.googleusercontent.com/d/1Ci2fp-HxbMO4Iq3ypz0nf1I4_vSwUHmE' }
+                 ];
+
+            listCalon.forEach((c, idx) => {
+                const cNum = idx + 1;
+                const existingVal = existingTpsData ? (existingTpsData[`c${cNum}`] || 0) : 0;
+                
+                const html = `
+                    <div class="bg-emerald-50/60 border border-emerald-200 rounded-lg p-3 flex flex-col items-center shadow-sm">
+                        <img src="${c.foto}" alt="${c.nama}" referrerpolicy="no-referrer" class="w-14 h-14 rounded-full object-cover shadow border mb-2">
+                        <p class="text-xs font-bold text-gray-500 mb-0.5">No. Urut ${c.no_urut}</p>
+                        <label class="block text-xs font-bold text-center text-gray-800 mb-2 h-8 overflow-hidden">${c.nama}</label>
+                        <input type="number" 
+                               id="inputC${cNum}" 
+                               min="0" 
+                               value="${existingVal}" 
+                               required 
+                               onfocus="this.select()"
+                               oninput="calculateFormTotals()" 
+                               class="w-full text-center font-bold text-lg border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-emerald-500 bg-white">
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+
+            if (existingTpsData) {
+                document.getElementById('inputTidakSah').value = existingTpsData.tidak_sah || 0;
+            }
+
+            calculateFormTotals();
+        }
+
+        function calculateFormTotals() {
+            let totalSah = 0;
+            for (let i = 1; i <= 5; i++) {
+                const inputEl = document.getElementById(`inputC${i}`);
+                if (inputEl) {
+                    const val = parseInt(inputEl.value) || 0;
+                    totalSah += val;
+                }
+            }
+            const tdkSah = parseInt(document.getElementById('inputTidakSah').value) || 0;
+            
+            document.getElementById('inputTotalSah').value = totalSah;
+            document.getElementById('inputTotalHakPilih').value = totalSah + tdkSah;
+        }
+
+        function handleFormSubmit(e) {
+            if (e) e.preventDefault();
+            const btn = document.getElementById('btnSubmitForm');
+            if (!btn) return;
+
+            btn.disabled = true;
+            btn.innerText = '⏳ Mengirim Data...';
+
+            const payload = {
+                action: 'submitData',
+                tps_id: currentUser ? currentUser.tps_id : '',
+                operator_name: currentUser ? currentUser.operator_name : '',
+                role: currentUser ? currentUser.role : 'OPERATOR',
+                c1: parseInt(document.getElementById('inputC1')?.value) || 0,
+                c2: parseInt(document.getElementById('inputC2')?.value) || 0,
+                c3: parseInt(document.getElementById('inputC3')?.value) || 0,
+                c4: parseInt(document.getElementById('inputC4')?.value) || 0,
+                c5: parseInt(document.getElementById('inputC5')?.value) || 0,
+                tidak_sah: parseInt(document.getElementById('inputTidakSah')?.value) || 0
+            };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    alert('✅ ' + res.message);
+                    fetchData();
+                } else {
+                    alert('⚠️ Gagal: ' + res.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error submitting data:", err);
+                alert('⚠️ Terjadi kesalahan koneksi saat mengirim data.');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = '💾 Simpan & Perbarui Data TPS';
+            });
+        }
+    </script>
+</body>
+</html>
